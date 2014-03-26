@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE beans PUBLIC "-//SPRING//DTD BEAN 2.0//EN" "http://www.springframework.org/dtd/spring-beans-2.0.dtd">
+  <!--
+    Licensed to the Apache Software Foundation (ASF) under one or more
+    contributor license agreements. See the NOTICE file distributed with
+    this work for additional information regarding copyright ownership.
+    The ASF licenses this file to you under the Apache License, Version
+    2.0 (the "License"); you may not use this file except in compliance
+    with the License. You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0 
+    
+    Unless required by applicable law or agreed to in writing, software 
+    distributed under the License is distributed on an "AS IS" BASIS, 
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
+    See the License for the specific language governing permissions and 
+    limitations under the License.
+  -->
+<beans>
+
+    <!-- 这类注入若干NeteaseQiyeApi需要的参数，apiHost，rsaRivvateKey等等 -->
+    <bean id="neteaseQiyeApi" class="com.imtopsales.vysper.service.impl.NeteaseQiyeApi">
+        <property name="apiHost" value="mail.qiye.163.com" /> <!-- 注意：可能需要修改，有好几个服务器 -->
+        <property name="imapHost" value="imap.qiye.163.com" /> <!-- 注意：可能需要修改，有好几个服务器 -->
+        <property name="cid" value="your_cid" /> <!-- 注意：必须改成你自己的cid -->
+        <property name="rsaPrivateKey" value="your_private_key" /> <!-- 注意：必须改成你自己的私钥 -->
+    </bean>
+    
+    <bean id="qiyeStorageRegistry" class="com.imtopsales.vysper.service.impl.ProviderRegistry" init-method="init" >
+        <property name="api" ref="neteaseQiyeApi" />
+    </bean>
+
+    <alias name="qiyeStorageRegistry" alias="storageRegistry" />
+
+    <bean id="tcpEndpoint" class="org.apache.vysper.mina.TCPEndpoint"/>
+    
+    <bean id="server" class="org.apache.vysper.spring.SpringCompatibleXMPPServer"
+          init-method="init" destroy-method="destroy">
+        <constructor-arg value="your_domain"/><!-- 注意：这类必须修改企业邮箱的域名 -->
+        <property name="endpoints"><list><ref bean="tcpEndpoint"/></list></property>
+        <property name="storageProviderRegistry" ref="storageRegistry" />
+        <property name="certificateFile" value="classpath:bogus_mina_tls.cert" />
+        <property name="certificatePassword" value="boguspw" />
+        <property name="modules" >
+            <list>
+                <bean class="org.apache.vysper.xmpp.modules.extension.xep0092_software_version.SoftwareVersionModule"/>
+                <bean class="org.apache.vysper.xmpp.modules.extension.xep0202_entity_time.EntityTimeModule" />
+                <bean class="org.apache.vysper.xmpp.modules.extension.xep0054_vcardtemp.VcardTempModule" />
+                <bean class="org.apache.vysper.xmpp.modules.extension.xep0119_xmppping.XmppPingModule" />
+                <bean class="org.apache.vysper.xmpp.modules.extension.xep0049_privatedata.PrivateDataModule" />
+                <bean class="org.apache.vysper.xmpp.modules.extension.xep0050_adhoc_commands.AdhocCommandsModule" />
+                <bean class="org.apache.vysper.xmpp.modules.extension.xep0045_muc.MUCModule" />
+            </list>
+        </property>
+    </bean>
+    
+</beans>
